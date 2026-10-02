@@ -2,7 +2,7 @@ version: "1"
 
 services:
   - type: web
-    name: mychat
+    name: mychatindia
     env: node
     plan: free
     buildCommand: npm install
