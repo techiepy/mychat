@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#080c16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MyChat">
+    <title>MyChat Realtime Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1786888000000">
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="overlay active">
+        <div class="glass-panel login-panel">
+            <h1>Welcome to MyChat</h1>
+            <p>Enter a nickname to join the chat (No password required)</p>
+            <form id="login-form">
+                <input type="text" id="username-input" placeholder="Enter Nickname" required autocomplete="off">
+                <button type="submit" class="btn primary">Join</button>
+            </form>
+        </div>
+    </div>
+
+    
+    <!-- Color Theme Customization Modal -->
+    <div id="color-theme-overlay" class="overlay hidden">
+        <div class="glass-panel modal-panel notice-modal-panel" style="max-width: 460px;">
+            <h2 style="font-size: 1.2rem; margin-bottom: 0.25rem;">🎨 Accent Color Customization</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Select a neutral palette or pick your custom accent color.
+            </p>
+
+            <div style="margin-bottom: 1.25rem;">
+                <h3 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.75rem;">Preset Neutral & Color Palettes</h3>
+                <div id="color-presets-grid" class="color-presets-grid">
+                    <!-- Preset swatch buttons injected dynamically -->
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem;">Custom Color Picker</h3>
+                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(0,0,0,0.2); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border);">
+                    <input type="color" id="accent-color-picker" value="#6366f1" style="width: 42px; height: 36px; border: none; cursor: pointer; background: transparent; border-radius: 4px;">
+                    <span id="accent-hex-display" style="font-family: monospace; font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">#6366F1</span>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: auto;">(Click square to pick color)</span>
+                </div>
+            </div>
+
+            <div class="call-actions" style="justify-content: space-between; align-items: center;">
+                <button type="button" id="reset-color-btn" class="btn secondary">Reset to Neutral</button>
+                <button type="button" id="close-color-modal-btn" class="btn primary">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Notice Overlay -->
+    <div id="set-notice-overlay" class="overlay hidden">
+        <div class="glass-panel modal-panel notice-modal-panel">
+            <h2>📢 Global Notices</h2>
+            <p>share your message for the user</p>
+
+            <form id="set-notice-form">
+                <textarea id="set-notice-text" placeholder="Type a new notice message..." rows="3" required style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; resize: vertical;"></textarea>
+                <div class="call-actions" style="margin-top: 0.5rem; justify-content: flex-end;">
+                    <button type="submit" class="btn primary">Pin New Notice</button>
+                    <button type="button" id="cancel-notice-btn" class="btn secondary">Close</button>
+                </div>
+                <div id="set-notice-status" style="margin-top: 0.5rem; color: var(--success); font-size: 0.9rem; text-align: right;"></div>
+            </form>
+
+            <hr style="margin: 1.25rem 0; border: none; border-top: 1px solid var(--glass-border);">
+
+            <!-- Active Notices History Section -->
+            <div id="current-notice-section">
+                <h3 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.75rem; text-align: left;">All Active Notices (<span id="notices-count">0</span>)</h3>
+                <div id="notices-list-container" class="notices-list-container">
+                    <!-- Notice cards rendered dynamically here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden">
+        
+        <!-- Pinned Notice Banner -->
+        <div id="pinned-notice-banner" class="hidden" style="background: var(--primary); color: white; text-align: center; padding: 0.5rem 1rem; font-weight: 500; font-size: 0.9rem; z-index: 50; border-bottom: 1px solid rgba(0,0,0,0.1);">
+            <span id="pinned-notice-content"></span>
+        </div>
+        
+        <header class="app-header glass-panel">
+            <div class="header-top">
+                <h2 id="chat-title" class="brand-title">MyChat</h2>
+                <div class="header-actions">
+                    <span id="current-user-display" class="badge user-badge"></span>
+                    <button id="font-decrease-btn" class="btn icon-btn mini-btn" title="Decrease Font Size">A-</button>
+                    <button id="font-increase-btn" class="btn icon-btn mini-btn" title="Increase Font Size">A+</button>
+                    <button id="theme-toggle-btn" class="btn icon-btn mini-btn" title="Toggle Light/Dark Mode">🌓</button>
+                    <button id="color-theme-btn" class="btn icon-btn mini-btn" title="Customize Accent Color">🎨</button>
+                    <button id="set-notice-btn" class="btn secondary mini-btn" style="margin-right:0.5rem;" title="Set Global Notice">📢 Set Notice</button>
+                    <button id="audio-call-btn" class="btn secondary mini-btn">📞</button>
+                    <button id="call-btn" class="btn secondary mini-btn">🎥 <span class="badge new-badge" style="display:none">!</span></button>
+                </div>
+            </div>
+            <!-- Mobile & Desktop Tab Navigation -->
+            <div class="app-navigation">
+                <button id="tab-chat" class="tab-btn active">💬 Messages</button>
+                <button id="tab-users" class="tab-btn">👥 Active Users <span id="mobile-user-count" class="badge">0</span></button>
+                
+            </div>
+        </header>
+
+        <div class="main-content-area">
+            <!-- Sidebar: Active Users -->
+            <aside class="sidebar" id="users-panel">
+                <div class="sidebar-header desktop-only">
+                    <h2>Online Users <span id="user-count">(0)</span></h2>
+                </div>
+                <ul id="user-list"></ul>
+            </aside>
+
+            
+
+            <!-- Main Chat Area -->
+            <main class="chat-area active" id="chat-panel">
+                <div class="chat-header-info" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="current-chat-name">Select a user to start chatting</h3>
+                    <span id="typing-indicator" class="typing-indicator hidden">✍️ typing...</span>
+                </div>
+                <div id="messages-container" class="messages-list">
+                    <!-- Messages go here -->
+                </div>
+
+                <div class="chat-input-area">
+                    
+                    
+                    <div id="file-preview-area" class="hidden">
+                        <div class="preview-content">
+                            <span id="preview-filename"></span>
+                            <button id="cancel-preview-btn" class="btn icon-btn mini-btn danger" title="Cancel Upload" style="padding: 0.1rem 0.4rem; font-size: 0.7rem; margin-left: 0.5rem;">✖</button>
+                        </div>
+                    </div>
+                    <div id="voice-recording-area" class="voice-recording-area hidden">
+                        <span class="recording-pulse">🔴</span>
+                        <span id="recording-timer">Recording 0:00</span>
+                        <button type="button" id="cancel-voice-btn" class="btn danger mini-btn" style="margin-left:auto;">Cancel</button>
+                        <button type="button" id="send-voice-btn" class="btn success mini-btn" style="margin-left:0.3rem;">Send Voice</button>
+                    </div>
+                    <form id="chat-form">
+                        <label for="file-input" class="btn icon-btn upload-btn" title="Upload File">
+                            📎
+                        </label>
+                        <input type="file" id="file-input" style="display: none;">
+                        <button type="button" id="voice-note-btn" class="btn icon-btn voice-btn" title="Record Voice Note">
+                            🎤
+                        </button>
+                        <input type="text" id="message-input" placeholder="Type here..." autocomplete="off">
+                        <button type="submit" class="btn primary send-btn">Send</button>
+                    </form>
+                    <div id="upload-status"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Incoming Call Overlay -->
+    <div id="incoming-call-overlay" class="overlay hidden">
+        <div class="glass-panel modal-panel pending-call-panel">
+            <h2 id="incoming-caller-name">Incoming Video Call from User</h2>
+            <div class="call-actions">
+                <button id="accept-call-btn" class="btn success">Accept</button>
+                <button id="reject-call-btn" class="btn danger">Decline</button>
+            </div>
+            <!-- Auto-looping ringtone while the modal is open (MP3 first for iOS Safari / Chrome / Opera) -->
+            <audio id="ringtone-audio" loop preload="auto">
+                <source src="https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3" type="audio/mpeg">
+                <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" type="audio/ogg">
+            </audio>
+        </div>
+    </div>
+
+    <!-- Dedicated Audio Element for uninterrupted WebRTC Audio on Mobile (Safari, Chrome, Opera) & Desktop -->
+    <audio id="remote-audio" autoplay playsinline webkit-playsinline></audio>
+
+    <!-- Video / Audio Call Overlay -->
+    <div id="call-overlay" class="overlay hidden">
+        <div id="call-panel" class="glass-panel call-panel">
+            <!-- Compact Floating Bar for Audio Calls (allows chatting while on call) -->
+            <div id="audio-call-bar" class="audio-call-bar hidden">
+                <div class="audio-bar-left">
+                    <div id="audio-call-avatar" class="audio-avatar-mini">📞</div>
+                    <div class="audio-bar-info">
+                        <div class="audio-bar-name-row">
+                            <span id="audio-call-target-name" class="audio-bar-name">Audio Call</span>
+                            <span id="audio-call-status-indicator" class="call-pulse-dot"></span>
+                        </div>
+                        <span id="call-timer" class="audio-bar-timer">Connecting...</span>
+                    </div>
+                </div>
+                <div class="audio-bar-actions">
+                    <button type="button" id="toggle-audio-mini" class="btn icon-btn mini-btn" title="Mute/Unmute Mic">🎤</button>
+                    <button type="button" id="toggle-video-mini" class="btn icon-btn mini-btn" title="Upgrade to Video Call">🎥</button>
+                    <button type="button" id="end-call-btn-mini" class="btn icon-btn mini-btn danger" title="End Call">📵</button>
+                </div>
+            </div>
+
+            <!-- Video Call Panel (Can also be minimized to chat freely) -->
+            <div id="video-call-content" class="video-call-content">
+                <div class="call-header">
+                    <div class="call-header-info-group">
+                        <h2 id="call-title">Video Call</h2>
+                        <span id="video-call-timer" class="video-timer">Connecting...</span>
+                    </div>
+                    <div class="call-header-btns">
+                        <button type="button" id="minimize-call-btn" class="btn icon-btn mini-btn" title="Minimize / Chat">🗗</button>
+                        <button type="button" id="end-call-btn" class="btn danger mini-btn">End</button>
+                    </div>
+                </div>
+
+                <div class="video-grid" id="video-grid">
+                    <div class="video-container local">
+                        <video id="local-video" autoplay muted playsinline webkit-playsinline></video>
+                        <div id="local-mute-icon" class="video-overlay-icon hidden">🔇</div>
+                        <span class="video-label">You</span>
+                    </div>
+                    <div class="video-container remote">
+                        <video id="remote-video" autoplay playsinline webkit-playsinline></video>
+                        <div id="remote-mute-icon" class="video-overlay-icon hidden">🔇</div>
+                        <button type="button" id="fullscreen-btn" class="btn icon-btn mini-btn fullscreen-toggle" title="Full Screen">⛶</button>
+                        <span class="video-label">Remote</span>
+                    </div>
+                </div>
+
+                <div class="call-controls">
+                    <button type="button" id="toggle-audio" class="btn secondary">Mute</button>
+                    <button type="button" id="toggle-video" class="btn secondary">Stop Video</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js?v=1786890020000"></script>
+</body>
+</html>

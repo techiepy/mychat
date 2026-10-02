@@ -1,0 +1,20 @@
+version: "1"
+
+services:
+  - type: web
+    name: mychat
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: EMAIL_USER
+        value: techguz11@gmail.com
+      - key: EMAIL_PASS
+        value: pxff zmhr osov bjrt
+      - key: METERED_APP_NAME
+        value: dream360-chat
+      - key: METERED_API_KEY
+        value: c04ab7188ab5293b168534813388046a8688
