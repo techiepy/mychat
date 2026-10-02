@@ -668,6 +668,152 @@ socket.on('private_message', (data) => {
     }
 });
 
+// ==========================================
+// FILE DOWNLOAD & STORAGE UTILITIES
+// ==========================================
+window.fileDataStore = window.fileDataStore || new Map();
+
+function formatFileSize(bytes) {
+    if (!bytes || isNaN(bytes)) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function getFileIcon(type, name) {
+    const n = (name || '').toLowerCase();
+    const t = (type || '').toLowerCase();
+    if (t.startsWith('image/')) return '🖼️';
+    if (t.startsWith('video/')) return '🎥';
+    if (t.startsWith('audio/')) return '🎵';
+    if (n.endsWith('.pdf') || t.includes('pdf')) return '📕';
+    if (n.endsWith('.doc') || n.endsWith('.docx') || t.includes('word') || t.includes('officedocument.wordprocessingml')) return '📘';
+    if (n.endsWith('.xls') || n.endsWith('.xlsx') || t.includes('sheet') || t.includes('excel') || t.includes('spreadsheetml')) return '📗';
+    if (n.endsWith('.ppt') || n.endsWith('.pptx') || t.includes('presentation') || t.includes('presentationml')) return '📙';
+    if (n.endsWith('.zip') || n.endsWith('.rar') || n.endsWith('.7z') || n.endsWith('.tar') || n.endsWith('.gz') || t.includes('zip') || t.includes('compressed')) return '📦';
+    if (n.endsWith('.txt') || n.endsWith('.csv') || n.endsWith('.json') || n.endsWith('.md')) return '📄';
+    return '📁';
+}
+
+function downloadFile(dataUrl, filename, mimeType) {
+    if (!dataUrl) {
+        alert('File data is missing or corrupted.');
+        return;
+    }
+
+    const cleanFilename = (filename || 'download').replace(/[/\\?%*:|"<>]/g, '_');
+
+    try {
+        let blob;
+        let detectedMime = mimeType || 'application/octet-stream';
+
+        if (dataUrl.startsWith('data:')) {
+            const commaIdx = dataUrl.indexOf(',');
+            if (commaIdx !== -1) {
+                const header = dataUrl.substring(0, commaIdx);
+                const b64Data = dataUrl.substring(commaIdx + 1);
+                const mimeMatch = header.match(/:(.*?);/);
+                if (mimeMatch && mimeMatch[1]) {
+                    detectedMime = mimeMatch[1];
+                }
+
+                // Decode base64 in chunks to prevent stack overflow on large files
+                const byteCharacters = atob(b64Data);
+                const byteArrays = [];
+                const sliceSize = 1024;
+                for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                    const slice = byteCharacters.slice(offset, offset + sliceSize);
+                    const byteNumbers = new Array(slice.length);
+                    for (let i = 0; i < slice.length; i++) {
+                        byteNumbers[i] = slice.charCodeAt(i);
+                    }
+                    byteArrays.push(new Uint8Array(byteNumbers));
+                }
+                blob = new Blob(byteArrays, { type: detectedMime });
+            } else {
+                throw new Error('Malformed data URL');
+            }
+        } else if (dataUrl.startsWith('blob:')) {
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = dataUrl;
+            a.download = cleanFilename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                if (a.parentNode) document.body.removeChild(a);
+            }, 5000);
+            return;
+        } else {
+            // Standard HTTP/S URL
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = dataUrl;
+            a.download = cleanFilename;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                if (a.parentNode) document.body.removeChild(a);
+            }, 5000);
+            return;
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = cleanFilename;
+        
+        // Mobile iOS Safari compatibility
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            a.target = '_blank';
+        }
+
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            if (a.parentNode) document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+        }, 15000);
+    } catch (err) {
+        console.error('Download via Blob failed, attempting direct download fallback:', err);
+        try {
+            const fallbackLink = document.createElement('a');
+            fallbackLink.style.display = 'none';
+            fallbackLink.href = dataUrl;
+            fallbackLink.download = cleanFilename;
+            fallbackLink.target = '_blank';
+            document.body.appendChild(fallbackLink);
+            fallbackLink.click();
+            setTimeout(() => {
+                if (fallbackLink.parentNode) document.body.removeChild(fallbackLink);
+            }, 5000);
+        } catch (e2) {
+            console.error('All download methods failed:', e2);
+            alert('Could not download file. Please check browser permissions.');
+        }
+    }
+}
+
+window.triggerFileDownload = function(messageId, element) {
+    let file = window.fileDataStore ? window.fileDataStore.get(messageId) : null;
+    if (!file && element) {
+        const card = element.closest('.file-message-card');
+        if (card && card._fileData) {
+            file = card._fileData;
+        }
+    }
+    if (!file || !file.url) {
+        console.warn('File data not found for message:', messageId);
+        alert('File data is no longer available in memory. Please ask the sender to re-send.');
+        return;
+    }
+    downloadFile(file.url, file.name, file.type);
+};
+
 socket.on('file_message', (data) => {
     // Only process file messages that are sent directly to us or by us in a DM
     if (!data.isPrivate && !data.isSelfToTarget) return; // Ignore global file messages completely
@@ -684,34 +830,62 @@ socket.on('file_message', (data) => {
 
     const { msgDiv, bubbleDiv } = createMessageElement(isLocal, displayUsername, data.time, data.messageId);
     
-    // Check if image
-    if (data.type.startsWith('image/')) {
-        bubbleDiv.innerHTML = `
-            <div class="file-message">
-                <a href="${data.url}" class="file-link" target="_blank">🖼️ ${data.name}</a>
-                <img src="${data.url}" alt="${data.name}" />
+    // Store in global memory map for fast, reliable click-to-download
+    if (!window.fileDataStore) window.fileDataStore = new Map();
+    window.fileDataStore.set(data.messageId, {
+        url: data.url,
+        name: data.name,
+        type: data.type
+    });
+
+    const fileType = (data.type || '').toLowerCase();
+    const fileName = data.name || 'file';
+    const computedSize = data.size || (data.url ? Math.round((data.url.length * 3) / 4) : 0);
+    const sizeDisplay = formatFileSize(computedSize);
+    const icon = getFileIcon(fileType, fileName);
+
+    let mediaPreviewHtml = '';
+    if (fileType.startsWith('image/')) {
+        mediaPreviewHtml = `
+            <div class="file-preview-thumbnail" onclick="triggerFileDownload('${data.messageId}', this)" title="Click to download image">
+                <img src="${data.url}" alt="${fileName}" class="file-preview-img" loading="lazy" />
             </div>
         `;
-    } else if (data.type.startsWith('video/')) {
-        bubbleDiv.innerHTML = `
-            <div class="file-message">
-                <a href="${data.url}" class="file-link" target="_blank">🎥 ${data.name}</a>
-                <video src="${data.url}" controls style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem;"></video>
-            </div>
+    } else if (fileType.startsWith('video/')) {
+        mediaPreviewHtml = `
+            <video src="${data.url}" controls class="file-preview-video"></video>
         `;
-    } else if (data.type.startsWith('audio/')) {
-         bubbleDiv.innerHTML = `
-            <div class="file-message">
-                <a href="${data.url}" class="file-link" target="_blank">🎵 ${data.name}</a>
-                <audio src="${data.url}" controls style="max-width: 100%; margin-top: 0.5rem;"></audio>
-            </div>
+    } else if (fileType.startsWith('audio/')) {
+        mediaPreviewHtml = `
+            <audio src="${data.url}" controls class="file-preview-audio"></audio>
         `;
-    } else {
-        bubbleDiv.innerHTML = `
-            <div class="file-message">
-                <a href="${data.url}" class="file-link" target="_blank">📁 ${data.name}</a>
+    }
+
+    bubbleDiv.innerHTML = `
+        <div class="file-message-card" id="file-card-${data.messageId}">
+            ${mediaPreviewHtml}
+            <div class="file-info-row">
+                <div class="file-icon-badge">${icon}</div>
+                <div class="file-text-info">
+                    <span class="file-name" title="${fileName}">${fileName}</span>
+                    <span class="file-size">${sizeDisplay}</span>
+                </div>
+                <button type="button" class="file-download-btn" onclick="triggerFileDownload('${data.messageId}', this)" title="Download ${fileName}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download</span>
+                </button>
             </div>
-        `;
+        </div>
+    `;
+
+    // Attach data directly to DOM element so download works across tab switches
+    const cardEl = bubbleDiv.querySelector('.file-message-card');
+    if (cardEl) {
+        cardEl._fileData = { url: data.url, name: fileName, type: fileType };
     }
     
     const tabId = isLocal ? privateChatTargetId : data.senderId;
@@ -889,6 +1063,7 @@ chatForm.addEventListener('submit', (e) => {
                 targetId: privateChatTargetId,
                 messageId: generateMessageId(),
                 name: fileToSend.name,
+                size: fileToSend.size,
                 type: fileToSend.type,
                 url: dataUrl
             };
@@ -1045,6 +1220,7 @@ sendVoiceBtn.addEventListener('click', () => {
                 targetId: privateChatTargetId,
                 messageId: generateMessageId(),
                 name: `Voice Note (${formattedDuration})`,
+                size: audioBlob.size,
                 type: finalMimeType,
                 url: dataUrl
             });

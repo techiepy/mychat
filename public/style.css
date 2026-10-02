@@ -446,7 +446,116 @@ body.light-mode #message-input { background: white; border-color: rgba(0,0,0,0.2
     to { opacity: 0.3; transform: scale(0.85); }
 }
 
-/* Files */
+/* Files & Document Downloads */
+.file-message-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    max-width: 320px;
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.file-preview-thumbnail {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.file-preview-thumbnail:hover {
+    opacity: 0.92;
+    transform: scale(1.01);
+}
+.file-preview-img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+}
+.file-preview-video {
+    width: 100%;
+    max-height: 260px;
+    border-radius: 8px;
+    background: #000;
+}
+.file-preview-audio {
+    width: 100%;
+    margin-top: 0.2rem;
+    border-radius: 8px;
+}
+
+.file-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+}
+body.light-mode .file-info-row {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+.file-icon-badge {
+    font-size: 1.35rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.file-text-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-grow: 1;
+    min-width: 0;
+}
+.file-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.file-size {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.file-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--primary);
+    color: #ffffff !important;
+    border: none;
+    padding: 0.42rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+.file-download-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+.file-download-btn:active {
+    transform: translateY(0);
+}
+.file-download-btn svg {
+    flex-shrink: 0;
+}
+
 .file-message img { max-width: 200px; border-radius: 4px; margin-top: 0.2rem; }
 .file-link { color: #818cf8; text-decoration: underline; word-break: break-all; font-size: 0.9em; }
 
