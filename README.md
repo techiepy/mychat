@@ -77,4 +77,4 @@ METERED_API_KEY=c04ab7188ab5293b168534813388046a8688
 ---
 
 ## 🌐 Hosted Live Domain
-- Live URL: **https://mychat.onrender.com**
+- Live URL: **https://mychat-8vg9.onrender.com**
