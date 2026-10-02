@@ -246,6 +246,12 @@ io.on('connection', (socket) => {
         io.emit('system_message', `${userObj.name} deleted a global notice.`);
     });
 
+    // =========================================================================
+    // ZERO-DISK-STORAGE: EPHEMERAL IN-MEMORY FILE & MEDIA RELAY
+    // Files, documents, images, and voice notes are NEVER stored on the server's disk.
+    // Data is streamed purely in-memory via WebSocket packets directly to recipient(s).
+    // Files can only be saved to local devices by the user clicking Download.
+    // =========================================================================
     socket.on('file_message', (data) => {
         const userObj = users.get(socket.id) || { name: 'Anonymous', id: 'unknown' };
 
