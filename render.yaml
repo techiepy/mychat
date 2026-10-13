@@ -2,11 +2,11 @@ version: "1"
 
 services:
   # ==========================================
-  # Service: myindiachat.onrender.com
+  # Service: malayalichat.onrender.com
   # Account: dev.aromal01@gmail.com
   # ==========================================
   - type: web
-    name: myindiachat
+    name: malayalichat
     env: node
     plan: free
     buildCommand: npm install
@@ -15,7 +15,7 @@ services:
       - key: PORT
         value: 10000
       - key: APP_NAME
-        value: MyIndiaChat
+        value: MalayaliChat
       - key: EMAIL_USER
         value: dev.aromal01@gmail.com
       - key: EMAIL_PASS
