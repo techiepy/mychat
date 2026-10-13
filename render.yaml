@@ -1,8 +1,11 @@
 version: "1"
 
 services:
+  # ==========================================
+  # Service 1: indiachat.onrender.com
+  # ==========================================
   - type: web
-    name: mychatindia
+    name: indiachat
     env: node
     plan: free
     buildCommand: npm install
@@ -10,6 +13,54 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      - key: APP_NAME
+        value: IndiaChat
+      - key: EMAIL_USER
+        value: techguz11@gmail.com
+      - key: EMAIL_PASS
+        value: pxff zmhr osov bjrt
+      - key: METERED_APP_NAME
+        value: dream360-chat
+      - key: METERED_API_KEY
+        value: c04ab7188ab5293b168534813388046a8688
+
+  # ==========================================
+  # Service 2: dreamchat.onrender.com
+  # ==========================================
+  - type: web
+    name: dreamchat
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: APP_NAME
+        value: DreamChat
+      - key: EMAIL_USER
+        value: techguz11@gmail.com
+      - key: EMAIL_PASS
+        value: pxff zmhr osov bjrt
+      - key: METERED_APP_NAME
+        value: dream360-chat
+      - key: METERED_API_KEY
+        value: c04ab7188ab5293b168534813388046a8688
+
+  # ==========================================
+  # Service 3: mydream.onrender.com
+  # ==========================================
+  - type: web
+    name: mydream
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: APP_NAME
+        value: MyDream
       - key: EMAIL_USER
         value: techguz11@gmail.com
       - key: EMAIL_PASS
