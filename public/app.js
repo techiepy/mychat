@@ -111,11 +111,11 @@ const mobileUserCount = document.getElementById('mobile-user-count');
 let currentUsername = '';
 let currentPinnedNotices = [];
 // Per-tab unique session ID for mobile reconnection survival without cross-device sync collisions
-let currentUserId = sessionStorage.getItem('mychat_userId') || sessionStorage.getItem('dream360_userId');
+let currentUserId = sessionStorage.getItem('dream360_userId');
 if (!currentUserId) {
     currentUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    sessionStorage.setItem('dream360_userId', currentUserId);
 }
-sessionStorage.setItem('mychat_userId', currentUserId);
 let privateChatTargetId = null;
 let activeUsersList = [];
 const typingUsersMap = new Map();
@@ -2019,7 +2019,7 @@ function applyAccentColor(hex) {
     document.documentElement.style.setProperty('--message-own-bg', `rgba(${rgbObj.str}, 0.18)`);
 
     try {
-        localStorage.setItem('mychat_accent_color', hex);
+        localStorage.setItem('dream360_accent_color', hex);
     } catch (e) {
         console.warn('Could not save accent color to localStorage', e);
     }
@@ -2056,7 +2056,7 @@ function initColorCustomization() {
     }
 
     // Load saved accent color or default
-    const savedColor = localStorage.getItem('mychat_accent_color') || localStorage.getItem('dream360_accent_color') || '#6366f1';
+    const savedColor = localStorage.getItem('dream360_accent_color') || '#6366f1';
     applyAccentColor(savedColor);
 
     if (colorThemeBtn && colorThemeOverlay) {
@@ -2092,11 +2092,34 @@ function initColorCustomization() {
     }
 }
 
+// Dynamic Multi-site Branding (Dream360, IndiaChat, DreamChat, MyDream)
+function initDynamicBranding() {
+    fetch('/api/config')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.appName) {
+                document.title = `${data.appName} Realtime Chat`;
+                const loginH1 = document.querySelector('#login-overlay h1');
+                if (loginH1) loginH1.textContent = `Welcome to ${data.appName}`;
+                const brandTitle = document.getElementById('chat-title');
+                if (brandTitle) brandTitle.textContent = data.appName;
+                const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+                if (appleTitle) appleTitle.setAttribute('content', data.appName);
+            }
+        })
+        .catch(() => {});
+}
+
 // Run init on startup
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initColorCustomization);
+    document.addEventListener('DOMContentLoaded', () => {
+        initColorCustomization();
+        initDynamicBranding();
+    });
 } else {
     initColorCustomization();
+    initDynamicBranding();
 }
+
 
 

@@ -34,6 +34,13 @@ app.use(express.static('public', {
     }
 }));
 
+// App configuration endpoint for multi-site dynamic branding (IndiaChat, DreamChat, MyDream)
+app.get('/api/config', (req, res) => {
+    res.json({
+        appName: process.env.APP_NAME || 'Dream360'
+    });
+});
+
 // ICE Servers endpoint for WebRTC STUN/TURN negotiation
 let cachedMeteredIce = null;
 let cachedMeteredTime = 0;
