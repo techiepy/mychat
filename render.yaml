@@ -69,3 +69,26 @@ services:
         value: dream360-chat
       - key: METERED_API_KEY
         value: c04ab7188ab5293b168534813388046a8688
+
+  # ==========================================
+  # Service 4: vibechat.onrender.com (dev.aromal01@gmail.com)
+  # ==========================================
+  - type: web
+    name: vibechat
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: APP_NAME
+        value: VibeChat
+      - key: EMAIL_USER
+        value: dev.aromal01@gmail.com
+      - key: EMAIL_PASS
+        value: pxff zmhr osov bjrt
+      - key: METERED_APP_NAME
+        value: dream360-chat
+      - key: METERED_API_KEY
+        value: c04ab7188ab5293b168534813388046a8688
