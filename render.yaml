@@ -25,10 +25,10 @@ services:
         value: c04ab7188ab5293b168534813388046a8688
 
   # ==========================================
-  # Service 2: dreamchat.onrender.com
+  # Service 2: dream360chat.onrender.com
   # ==========================================
   - type: web
-    name: dreamchat
+    name: dream360chat
     env: node
     plan: free
     buildCommand: npm install
@@ -37,7 +37,7 @@ services:
       - key: PORT
         value: 10000
       - key: APP_NAME
-        value: DreamChat
+        value: Dream360
       - key: EMAIL_USER
         value: techguz11@gmail.com
       - key: EMAIL_PASS
@@ -48,10 +48,10 @@ services:
         value: c04ab7188ab5293b168534813388046a8688
 
   # ==========================================
-  # Service 3: mydream.onrender.com
+  # Service 3: mydreamchat.onrender.com
   # ==========================================
   - type: web
-    name: mydream
+    name: mydreamchat
     env: node
     plan: free
     buildCommand: npm install
@@ -60,7 +60,7 @@ services:
       - key: PORT
         value: 10000
       - key: APP_NAME
-        value: MyDream
+        value: MyDreamChat
       - key: EMAIL_USER
         value: techguz11@gmail.com
       - key: EMAIL_PASS
